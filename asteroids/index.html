@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="style.css">
     <title>Asteroids</title>
 </head>
 <body>
     <div id="container">
-        <div id="menu">
-            <button id="play">Play</button>
-        </div>
-        <canvas id="game">
-
-        </canvas>
+        <div id="title">Asteroids</div>
+        <canvas id="game-window" width="800" height="600"></canvas>
+        <button id="play-btn">Play</button>
+        <button id="restart-btn">Restart</button>
         <div id="settings">
-
+            <h1>Settings</h1>
+            <button id="restart-btn">Restart</button>
+            <button id="back-btn">Back</button>
         </div>
     </div>
 </body>
