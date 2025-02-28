@@ -1,13 +1,21 @@
-// GLOBALS
 const canvas = document.getElementById('game-window'); 
 const ctx = canvas.getContext('2d');
-const TWO_PI = Math.PI * 2;
+
+// GAME CANVAS CONSTANTS
 const gameWidth = canvas.width; 
 const gameHeight = canvas.height;
 const midPointCanvas = {
     x: gameWidth / 2,
     y: gameHeight / 2
 }
+const X_MIN = 0;
+const X_MAX = gameWidth;
+const Y_MIN = 0;
+const Y_MAX = gameHeight;
+
+// HELPERS
+const TWO_PI = Math.PI * 2;
+
 
 
 class Ship {
@@ -119,10 +127,10 @@ class Ship {
 class Asteroid {
 
     spawnLocation = {
-        top: {x: Math.random() * gameWidth, y: 0},
-        bottom: {x: Math.random() * gameWidth, y: gameHeight},
-        left: {x: 0, y: Math.random() * gameHeight},
-        right: {x: gameWidth, y: Math.random() * gameHeight},
+        top: {x: Math.random() * gameWidth, y: -35},   
+        bottom: {x: Math.random() * gameWidth, y: gameHeight + 35},
+        left: {x: -35, y: Math.random() * gameHeight},
+        right: {x: gameWidth + 35, y: Math.random() * gameHeight},
     }
 
     // Sets the flight angle of the asteroid based on its spawn location
@@ -155,6 +163,9 @@ class Asteroid {
      * Sets the rotation angle to 0.
      * Sets the rotation speed to a random number between 0.5 and 2.
      * Sets the rotation direction to either -1 (counterclockwise) or 1 (clockwise).
+     * Sets the radius of the asteroid to a random number between 20 and 55.
+     * Sets the number of edges of the asteroid to a random number between 5 and 10.
+     * Sets the random angle variations for each edge.
      */
     constructor() {
         // Positioning
@@ -162,13 +173,14 @@ class Asteroid {
         const randomSpawn = spawnPoints[Math.floor(Math.random() * 4)];
         this.position = this.spawnLocation[randomSpawn];
         this.flightAngle = this.setFlightAngle();
+        this.offScreen = false;
         
         // Control properties
         this.speed = 1 + Math.random() * 2; 
         this.xVelocity = Math.cos(this.flightAngle) * this.speed;
         this.yVelocity = Math.sin(this.flightAngle) * this.speed;
         this.rotationAngle = 0;
-        this.rotationSpeed = 0.005 + Math.random() * 0.01;
+        this.rotationSpeed = 0.005 + Math.random() * 0.02;
         this.rotationDirection = Math.random() < 0.5 ? -1 : 1;
         this.radius = 20 + Math.random() * 35;
         this.numEdges = Math.floor(5 + Math.random() * 5);
@@ -177,6 +189,13 @@ class Asteroid {
         this.angleVariations = [];
         for (let i = 0; i < this.numEdges; i++) {
             this.angleVariations.push(Math.random() * Math.PI / 4);
+        }
+    }
+
+    checkOffScreen() {
+        if (this.position.x < -35 || this.position.x > gameWidth + 35 || 
+            this.position.y < -35 || this.position.y > gameHeight + 35) {
+            this.offScreen = true;
         }
     }
 
@@ -214,32 +233,95 @@ class Asteroid {
         this.position.y += this.yVelocity;
     }
 
+    explode() {
+        // implement explosion particle effects
+    }
+
     update() {
         this.rotate();
         this.move();
+        this.checkOffScreen();
         this.draw();
     }
 }
 
+class Game {
+    constructor() {
+        this.playGame = false;
+        this.gameOver = false;
+        this.pauseGame = false;
+        this.ship = new Ship();
+        this.asteroids = [];
+        this.score = 0;
+        this.cleanupInterval = setInterval(() => this.checkAsteroids(), 1000);;
+        this.spawnInterval = setInterval(() => this.spawnAsteroid(), 1000);
+    }
+
+    startGame() {
+        this.playGame = true;
+        this.cleanupInterval = setInterval(() => this.checkAsteroids(), 1000);
+    }
+
+    stopGame() {
+        this.playGame = false;
+    }
+
+    spawnAsteroid() {
+        const asteroid = new Asteroid();
+        this.asteroids.push(asteroid);
+    }
+
+    checkAsteroids() {
+        for (let i = this.asteroids.length - 1; i >= 0; i--) {
+            if (this.asteroids[i].offScreen) {
+                this.asteroids.splice(i, 1);
+            }
+        }
+    }
+
+    initialize() {
+        this.startGame();
+        
+    }
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
 // TESTING PURPOSES BELOW //
 
-const ship = new Ship();
-const asteroid = new Asteroid();
+const game = new Game();
 
 // Game loop
 function gameLoop() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, gameWidth, gameHeight);
 
-    ship.update();
-    asteroid.update();
+    // Update
+    if (game.playGame) {
+        game.ship.update();
+        game.asteroids.forEach(asteroid => {
+            asteroid.update();
+        });
+    }
     
     requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener('keydown', (e) => ship.keyDown(e));
-document.addEventListener('keyup', (e) => ship.keyUp(e));
+document.addEventListener('keydown', (e) => game.ship.keyDown(e));
+document.addEventListener('keyup', (e) => game.ship.keyUp(e));
 
 window.onload = () => {
+    game.initialize();
     gameLoop();
 };
