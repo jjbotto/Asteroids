@@ -1,5 +1,6 @@
 const canvas = document.getElementById('game-window'); 
 const ctx = canvas.getContext('2d');
+const playBtn = document.getElementById('play-btn');
 
 // GAME CANVAS CONSTANTS
 const gameWidth = canvas.width; 
@@ -250,20 +251,27 @@ class Game {
         this.playGame = false;
         this.gameOver = false;
         this.pauseGame = false;
-        this.ship = new Ship();
+        this.ship = null;
         this.asteroids = [];
         this.score = 0;
         this.cleanupInterval = setInterval(() => this.checkAsteroids(), 1000);;
         this.spawnInterval = setInterval(() => this.spawnAsteroid(), 1000);
+        this.invincibility = true;
+        playBtn.addEventListener('click', () => this.play());
     }
 
-    startGame() {
+    play() {
         this.playGame = true;
-        this.cleanupInterval = setInterval(() => this.checkAsteroids(), 1000);
+        this.ship = new Ship();
+        setTimeout(() => this.invincibility = false, 3000); 
+        playBtn.classList.add('hidden');
+        canvas.style.cursor = 'none';
     }
 
     stopGame() {
         this.playGame = false;
+        this.ship = null; 
+        
     }
 
     spawnAsteroid() {
@@ -279,11 +287,7 @@ class Game {
         }
     }
 
-    initialize() {
-        this.startGame();
-        
-    }
-
+    
 
 
 
@@ -307,13 +311,15 @@ function gameLoop() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, gameWidth, gameHeight);
 
-    // Update
-    if (game.playGame) {
+    // Update ship only if game is playing
+    if (game.playGame && game.ship) {
         game.ship.update();
-        game.asteroids.forEach(asteroid => {
-            asteroid.update();
-        });
     }
+    
+    // Always update asteroids
+    game.asteroids.forEach(asteroid => {
+        asteroid.update();
+    });
     
     requestAnimationFrame(gameLoop);
 }
@@ -322,6 +328,5 @@ document.addEventListener('keydown', (e) => game.ship.keyDown(e));
 document.addEventListener('keyup', (e) => game.ship.keyUp(e));
 
 window.onload = () => {
-    game.initialize();
     gameLoop();
 };
