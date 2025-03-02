@@ -118,6 +118,12 @@ class Ship {
         if (this.position.y < 0) this.position.y = gameHeight;
     }
 
+    shoot() {
+        if (this.isFiring) {
+            let bullet = new Bullet(this);
+        }
+    }
+
     update() {
         this.rotate();
         this.move();
@@ -268,10 +274,10 @@ class Game {
         canvas.style.cursor = 'none';
     }
 
-    stopGame() {
+    gameOver() {
         this.playGame = false;
-        this.ship = null; 
-        
+        this.ship = null;
+        canvas.style.cursor = 'auto';
     }
 
     spawnAsteroid() {
@@ -287,17 +293,49 @@ class Game {
         }
     }
 
+    fireBullet() {
+        if (this.playGame) {}
+    }
     
-
-
-
-
-
 
 
 }
 
+class Bullet {
+    constructor(ship) {
+        this.position = ship.position;
+        this.angle = ship.angle;
+        this.xVelocity = Math.cos(this.angle) * 10;
+        this.yVelocity = Math.sin(this.angle) * 10;
+    }
 
+    draw() {
+        ctx.save();
+        ctx.translate(this.position.x, this.position.y);
+        ctx.rotate(this.angle);
+        
+        ctx.beginPath();
+        ctx.fillStyle = 'white';
+        ctx.moveTo(1, -5);
+        ctx.lineTo(1, 5);
+        ctx.lineTo(-1, 5);
+        ctx.lineTo(-1, -5);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    move() {
+        this.position.x += this.xVelocity;
+        this.position.y += this.yVelocity;
+    }
+
+    update() {
+        this.move();
+        this.draw();
+    }
+}
 
 
 
@@ -305,6 +343,8 @@ class Game {
 // TESTING PURPOSES BELOW //
 
 const game = new Game();
+const ship = new Ship();
+const bullet = new Bullet(ship);
 
 // Game loop
 function gameLoop() {
@@ -328,5 +368,7 @@ document.addEventListener('keydown', (e) => game.ship.keyDown(e));
 document.addEventListener('keyup', (e) => game.ship.keyUp(e));
 
 window.onload = () => {
-    gameLoop();
+    //gameLoop();
+    bullet.draw();
+    ship.draw();
 };
