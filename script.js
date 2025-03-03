@@ -29,12 +29,13 @@ class Ship {
         this.isRotatingLeft = false;
         this.isRotatingRight = false;
         this.isThrusting = false;
-        this.isFiring = false;
+        this.hasFired = false;
+        this.bullets = [];
         
         // Movement properties (per frame)
         this.rotationSpeed = 0.05;  // in radians
         this.thrust = 0.05;          // acceleration rate
-        this.friction = 0.99;       // deceleration rate
+        this.friction = 0.994;       // deceleration rate
         this.xVelocity = 0;         // X velocity
         this.yVelocity = 0;         // Y velocity
     }
@@ -46,13 +47,15 @@ class Ship {
         
         // Draw ship
         ctx.beginPath();
-        ctx.strokeStyle = 'white';  
+        ctx.strokeStyle = 'white'; 
+        ctx.fillStyle = 'black'; 
         ctx.moveTo(0, -10);  // Top 
         ctx.lineTo(10, 10);  // Bottom right
         ctx.lineTo(0, 4);   // Middle 
         ctx.lineTo(-10, 10); // Bottom left
         ctx.closePath();
         ctx.stroke();
+        ctx.fill();
 
         ctx.restore();
     }
@@ -68,8 +71,8 @@ class Ship {
             case 'ArrowUp':
                 this.isThrusting = true;
                 break;
-            case 'Space':
-                this.isFiring = true;
+            case ' ':
+                this.fireBullet();
                 break;
         }
     }
@@ -85,8 +88,8 @@ class Ship {
             case 'ArrowUp':
                 this.isThrusting = false;
                 break;
-            case 'Space':
-                this.isFiring = false;
+            case ' ':
+                this.hasFired = false;
                 break;
         }
     }
@@ -118,15 +121,20 @@ class Ship {
         if (this.position.y < 0) this.position.y = gameHeight;
     }
 
-    shoot() {
-        if (this.isFiring) {
+    fireBullet() {
+        if (!this.hasFired) {
             let bullet = new Bullet(this);
+            this.bullets.push(bullet);
+            this.hasFired = true;
         }
     }
 
     update() {
         this.rotate();
         this.move();
+        for (let bullet of this.bullets) {
+            bullet.update();
+        }
         this.draw();
     }
 }
@@ -268,7 +276,12 @@ class Game {
 
     play() {
         this.playGame = true;
-        this.ship = new Ship();
+        if (!this.ship) {
+            this.ship = new Ship();
+            // Set up event listeners after ship is created
+            document.addEventListener('keydown', (e) => this.ship.keyDown(e));
+            document.addEventListener('keyup', (e) => this.ship.keyUp(e));
+        }
         setTimeout(() => this.invincibility = false, 3000); 
         playBtn.classList.add('hidden');
         canvas.style.cursor = 'none';
@@ -293,20 +306,20 @@ class Game {
         }
     }
 
-    fireBullet() {
-        if (this.playGame) {}
-    }
     
-
 
 }
 
 class Bullet {
     constructor(ship) {
-        this.position = ship.position;
+        this.position = {
+            x: ship.position.x,
+            y: ship.position.y
+        };
         this.angle = ship.angle;
-        this.xVelocity = Math.cos(this.angle) * 10;
-        this.yVelocity = Math.sin(this.angle) * 10;
+        this.speed = 10;
+        this.xVelocity = Math.cos(this.angle - Math.PI/2) * this.speed;
+        this.yVelocity = Math.sin(this.angle - Math.PI/2) * this.speed;
     }
 
     draw() {
@@ -343,8 +356,6 @@ class Bullet {
 // TESTING PURPOSES BELOW //
 
 const game = new Game();
-const ship = new Ship();
-const bullet = new Bullet(ship);
 
 // Game loop
 function gameLoop() {
@@ -364,11 +375,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener('keydown', (e) => game.ship.keyDown(e));
-document.addEventListener('keyup', (e) => game.ship.keyUp(e));
-
 window.onload = () => {
-    //gameLoop();
-    bullet.draw();
-    ship.draw();
+    gameLoop();
+    
 };
