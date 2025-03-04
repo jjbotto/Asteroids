@@ -64,15 +64,22 @@ class Ship {
         switch (event.key) {
             case 'ArrowLeft':
                 this.isRotatingLeft = true;
+                event.preventDefault();
                 break;
             case 'ArrowRight':
                 this.isRotatingRight = true;
+                event.preventDefault();
                 break;
             case 'ArrowUp':
                 this.isThrusting = true;
+                event.preventDefault();
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
                 break;
             case ' ':
                 this.fireBullet();
+                event.preventDefault();
                 break;
         }
     }
@@ -268,7 +275,8 @@ class Game {
         this.ship = null;
         this.asteroids = [];
         this.score = 0;
-        this.cleanupInterval = setInterval(() => this.checkAsteroids(), 1000);;
+        this.asteroidCleanupInterval = setInterval(() => this.checkAsteroids(), 1000);
+        this.bulletCleanupInterval = setInterval(() => this.checkBullets(), 3000);
         this.spawnInterval = setInterval(() => this.spawnAsteroid(), 1000);
         this.invincibility = true;
         playBtn.addEventListener('click', () => this.play());
@@ -298,10 +306,29 @@ class Game {
         this.asteroids.push(asteroid);
     }
 
+    checkBulletCollisions() {
+        let bullets = this.ship.bullets;
+        let asteroids = this.asteroids;
+
+        bullets.forEach(bullet => {
+            asteroids.forEach(asteroid => {
+                bullet.checkHit(asteroid);
+            });
+        });
+    }
+
     checkAsteroids() {
         for (let i = this.asteroids.length - 1; i >= 0; i--) {
             if (this.asteroids[i].offScreen) {
                 this.asteroids.splice(i, 1);
+            }
+        }
+    }
+
+    checkBullets() {
+        for (let i = this.ship.bullets.length - 1; i >= 0; i--) {
+            if (this.ship.bullets[i].offScreen) {
+                this.ship.bullets.splice(i, 1);
             }
         }
     }
@@ -320,6 +347,7 @@ class Bullet {
         this.speed = 10;
         this.xVelocity = Math.cos(this.angle - Math.PI/2) * this.speed;
         this.yVelocity = Math.sin(this.angle - Math.PI/2) * this.speed;
+        this.offScreen = false;
     }
 
     draw() {
@@ -339,6 +367,24 @@ class Bullet {
         ctx.restore();
     }
 
+    checkOffScreen() {
+        if (this.position.x < -5 || this.position.x > 805 || this.position.y < -5 || this.position.y > 605) {
+            this.offScreen = true;
+        }
+    }
+
+    checkHit(asteroid) {
+        let radius = asteroid.radius;
+        let bulletX = this.position.x;
+        let bulletY = this.position.y;
+        let distance = Math.hypot(bulletX - asteroid.position.x, bulletY - asteroid.position.y);
+
+        if (distance <= radius - 1) {
+            this.offScreen = true;
+            asteroid.offScreen = true;
+        }
+    }
+
     move() {
         this.position.x += this.xVelocity;
         this.position.y += this.yVelocity;
@@ -346,6 +392,7 @@ class Bullet {
 
     update() {
         this.move();
+        this.checkOffScreen();
         this.draw();
     }
 }
@@ -362,12 +409,13 @@ function gameLoop() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, gameWidth, gameHeight);
 
-    // Update ship only if game is playing
     if (game.playGame && game.ship) {
         game.ship.update();
+        game.checkBulletCollisions();
+        game.checkAsteroids();
+        game.checkBullets();
     }
     
-    // Always update asteroids
     game.asteroids.forEach(asteroid => {
         asteroid.update();
     });
