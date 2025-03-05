@@ -59,13 +59,6 @@ class Ship {
         ctx.stroke();
         ctx.fill();
 
-        ctx.beginPath();
-        ctx.strokeStyle = 'white';
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, 5, 0, TWO_PI);
-        ctx.stroke();
-        ctx.closePath();
-
         ctx.restore();
     }
 
