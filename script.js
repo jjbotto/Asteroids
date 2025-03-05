@@ -1,6 +1,7 @@
 const canvas = document.getElementById('game-window'); 
 const ctx = canvas.getContext('2d');
 const playBtn = document.getElementById('play-btn');
+const resetBtn = document.getElementById('reset-btn');
 
 // GAME CANVAS CONSTANTS
 const gameWidth = canvas.width; 
@@ -20,12 +21,13 @@ const TWO_PI = Math.PI * 2;
 
 
 class Ship {
-    constructor() {
+    constructor(position = midPointCanvas) {
         // Positioning
-        this.position = midPointCanvas;
+        this.position = position;
         this.angle = 0;
         
         // Control states
+        this.destroyed = false;
         this.isRotatingLeft = false;
         this.isRotatingRight = false;
         this.isThrusting = false;
@@ -33,7 +35,7 @@ class Ship {
         this.bullets = [];
         
         // Movement properties (per frame)
-        this.rotationSpeed = 0.05;  // in radians
+        this.rotationSpeed = 0.04;  // in radians
         this.thrust = 0.05;          // acceleration rate
         this.friction = 0.994;       // deceleration rate
         this.xVelocity = 0;         // X velocity
@@ -56,6 +58,13 @@ class Ship {
         ctx.closePath();
         ctx.stroke();
         ctx.fill();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'white';
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 5, 0, TWO_PI);
+        ctx.stroke();
+        ctx.closePath();
 
         ctx.restore();
     }
@@ -136,6 +145,22 @@ class Ship {
         }
     }
 
+    checkShipCollision(asteroid) {
+        let shipRadius = 5;
+        let shipX = this.position.x;
+        let shipY = this.position.y;    
+        let asteroidRadius = asteroid.radius;
+        let asteroidX = asteroid.position.x;
+        let asteroidY = asteroid.position.y;
+
+        let distance = Math.hypot(shipX - asteroidX, shipY - asteroidY);
+
+        if (distance <= shipRadius + asteroidRadius - 1) {
+            this.destroyed = true;
+            asteroid.offScreen = true;
+        }
+    }
+
     update() {
         this.rotate();
         this.move();
@@ -144,10 +169,10 @@ class Ship {
         }
         this.draw();
     }
+
 }
 
 class Asteroid {
-
     spawnLocation = {
         top: {x: Math.random() * gameWidth, y: -35},   
         bottom: {x: Math.random() * gameWidth, y: gameHeight + 35},
@@ -284,26 +309,47 @@ class Game {
 
     play() {
         this.playGame = true;
-        if (!this.ship) {
-            this.ship = new Ship();
-            // Set up event listeners after ship is created
-            document.addEventListener('keydown', (e) => this.ship.keyDown(e));
-            document.addEventListener('keyup', (e) => this.ship.keyUp(e));
-        }
+        this.ship = new Ship();
+        this.ship.position = {...midPointCanvas};
+        document.addEventListener('keydown', (e) => this.ship.keyDown(e));
+        document.addEventListener('keyup', (e) => this.ship.keyUp(e));
         setTimeout(() => this.invincibility = false, 3000); 
         playBtn.classList.add('hidden');
         canvas.style.cursor = 'none';
     }
 
-    gameOver() {
+    stopGame() {
         this.playGame = false;
+        document.removeEventListener('keydown', (e) => this.ship.keyDown(e));
+        document.removeEventListener('keyup', (e) => this.ship.keyUp(e));
         this.ship = null;
+        clearInterval(this.bulletCleanupInterval);
         canvas.style.cursor = 'auto';
+        playBtn.style.display = 'none';
+        resetBtn.style.display = 'block';
+        resetBtn.addEventListener('click', () => this.resetGame());
+    }
+
+    resetGame() {
+        this.score = 0;
+        this.invincibility = true;
+        resetBtn.style.display = 'none';
+        playBtn.style.display = 'block';
+        playBtn.classList.remove('hidden');
     }
 
     spawnAsteroid() {
         const asteroid = new Asteroid();
         this.asteroids.push(asteroid);
+    }
+
+    checkShipCollision() {
+        let ship = this.ship;
+        let asteroids = this.asteroids; 
+
+        asteroids.forEach(asteroid => {
+            ship.checkShipCollision(asteroid);
+        });
     }
 
     checkBulletCollisions() {
@@ -333,9 +379,35 @@ class Game {
         }
     }
 
-    
+    checkShipHealth() {
+        if (this.ship.destroyed) {
+            this.stopGame();
+        }
+    }
 
-}
+    loop() {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, gameWidth, gameHeight);
+
+        if (this.playGame && this.ship) {
+            this.ship.update();
+            this.checkBulletCollisions();
+            if (!this.invincibility) {
+                this.checkShipCollision();  
+            }
+            this.checkAsteroids();
+            this.checkBullets();
+            this.checkShipHealth();
+        }
+        
+        this.asteroids.forEach(asteroid => {
+            asteroid.update();
+        });
+        
+        requestAnimationFrame(() => this.loop());
+    }
+
+} 
 
 class Bullet {
     constructor(ship) {
@@ -405,25 +477,27 @@ class Bullet {
 const game = new Game();
 
 // Game loop
-function gameLoop() {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, gameWidth, gameHeight);
+// function gameLoop() {
+//     ctx.fillStyle = 'black';
+//     ctx.fillRect(0, 0, gameWidth, gameHeight);
 
-    if (game.playGame && game.ship) {
-        game.ship.update();
-        game.checkBulletCollisions();
-        game.checkAsteroids();
-        game.checkBullets();
-    }
+//     if (game.playGame && game.ship) {
+//         game.ship.update();
+//         game.checkBulletCollisions();
+//         game.checkShipCollision();  
+//         game.checkAsteroids();
+//         game.checkBullets();
+//         game.checkShipHealth();
+//     }
     
-    game.asteroids.forEach(asteroid => {
-        asteroid.update();
-    });
+//     game.asteroids.forEach(asteroid => {
+//         asteroid.update();
+//     });
     
-    requestAnimationFrame(gameLoop);
-}
+//     requestAnimationFrame(gameLoop);
+// }
 
 window.onload = () => {
-    gameLoop();
+    game.loop();
     
 };
