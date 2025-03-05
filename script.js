@@ -16,14 +16,14 @@ const Y_MIN = 0;
 const Y_MAX = gameHeight;
 
 // HELPERS
-const TWO_PI = Math.PI * 2;
+const TWO_PI = Math.PI * 2; // 360 degrees
 
 
 
 class Ship {
-    constructor(position = midPointCanvas) {
+    constructor() {
         // Positioning
-        this.position = position;
+        this.position = midPointCanvas;
         this.angle = 0;
         
         // Control states
@@ -224,6 +224,7 @@ class Asteroid {
         this.rotationDirection = Math.random() < 0.5 ? -1 : 1;
         this.radius = 20 + Math.random() * 35;
         this.numEdges = Math.floor(5 + Math.random() * 5);
+        this.destroyed = false;
         
         // Random angle variations for each edge
         this.angleVariations = [];
@@ -291,6 +292,7 @@ class Game {
         this.gameOver = false;
         this.pauseGame = false;
         this.ship = null;
+        this.scoreboard = null;
         this.asteroids = [];
         this.score = 0;
         this.asteroidCleanupInterval = setInterval(() => this.checkAsteroids(), 1000);
@@ -303,6 +305,8 @@ class Game {
     play() {
         this.playGame = true;
         this.ship = new Ship();
+        this.scoreboard = new Scoreboard();
+        this.scoreboard.secondsAlive = setInterval(() => this.scoreboard.increaseScore(), 1000);
         this.ship.position = {...midPointCanvas};
         document.addEventListener('keydown', (e) => this.ship.keyDown(e));
         document.addEventListener('keyup', (e) => this.ship.keyUp(e));
@@ -313,10 +317,12 @@ class Game {
 
     stopGame() {
         this.playGame = false;
+        this.scoreboard.gameOver = true;
         document.removeEventListener('keydown', (e) => this.ship.keyDown(e));
         document.removeEventListener('keyup', (e) => this.ship.keyUp(e));
         this.ship = null;
         clearInterval(this.bulletCleanupInterval);
+        clearInterval(this.scoreboard.secondsAlive);
         canvas.style.cursor = 'auto';
         playBtn.style.display = 'none';
         resetBtn.style.display = 'block';
@@ -352,13 +358,14 @@ class Game {
         bullets.forEach(bullet => {
             asteroids.forEach(asteroid => {
                 bullet.checkHit(asteroid);
+                if (asteroid.destroyed) this.scoreboard.increaseScore();
             });
         });
     }
 
     checkAsteroids() {
         for (let i = this.asteroids.length - 1; i >= 0; i--) {
-            if (this.asteroids[i].offScreen) {
+            if (this.asteroids[i].offScreen || this.asteroids[i].destroyed) {
                 this.asteroids.splice(i, 1);
             }
         }
@@ -384,6 +391,7 @@ class Game {
 
         if (this.playGame && this.ship) {
             this.ship.update();
+            this.scoreboard.update();
             this.checkBulletCollisions();
             if (!this.invincibility) {
                 this.checkShipCollision();  
@@ -446,7 +454,7 @@ class Bullet {
 
         if (distance <= radius - 1) {
             this.offScreen = true;
-            asteroid.offScreen = true;
+            asteroid.destroyed = true;
         }
     }
 
@@ -462,33 +470,33 @@ class Bullet {
     }
 }
 
+class Scoreboard {
+    constructor() {
+        this.secondsAlive = 0;
+        this.score = 0 + this.secondsAlive;
+        this.gameOver = false;
+    }
 
+
+    draw() {
+        ctx.fillStyle = 'white';
+        ctx.font = '25px Orbitron';
+        ctx.fillText('Score: ' + this.score, 20, 35);
+    }
+
+    update() {
+        this.draw();
+    }
+
+    increaseScore() {
+        this.score++;
+    }
+}
 
 
 // TESTING PURPOSES BELOW //
 
 const game = new Game();
-
-// Game loop
-// function gameLoop() {
-//     ctx.fillStyle = 'black';
-//     ctx.fillRect(0, 0, gameWidth, gameHeight);
-
-//     if (game.playGame && game.ship) {
-//         game.ship.update();
-//         game.checkBulletCollisions();
-//         game.checkShipCollision();  
-//         game.checkAsteroids();
-//         game.checkBullets();
-//         game.checkShipHealth();
-//     }
-    
-//     game.asteroids.forEach(asteroid => {
-//         asteroid.update();
-//     });
-    
-//     requestAnimationFrame(gameLoop);
-// }
 
 window.onload = () => {
     game.loop();
