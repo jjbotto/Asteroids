@@ -13,7 +13,28 @@
 <body>
     <div id="container">
         <p id="title">Asteroids</p>
-        <canvas id="game-window" width="800" height="600"></canvas>
+        <div id="game-container">
+            <div id="controls">
+                <p>Controls</p>
+                <div class="arrow-controls thrust">
+                    <img src="assets/up-arrow.png" alt="Arrow key up">
+                    <p>Thrust</p>
+                </div>
+                <div class="arrow-controls rotate">
+                  <div id="rotation-arrow-imgs">
+                      <img src="assets/left-arrow.png" alt="Arrow key left">
+                      <img src="assets/right-arrow.png" alt="Arrow key right">
+                  </div>
+                  <p>Rotate</p>
+                </div>
+                <div class="arrow-controls fire">
+                    <img src="assets/spacebar-2.png" alt="Spacebar">
+                    <p>Fire</p>
+                </div>
+            </div>
+            <canvas id="game-window" width="700" height="600"></canvas>
+            <div id="scoreboard"></div>
+        </div>
         <button id="play-btn">PLAY</button>
         <button id="reset-btn">RESET</button>
         <div id="settings">
