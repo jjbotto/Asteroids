@@ -134,6 +134,8 @@ class Ship {
         if (!this.hasFired) {
             let bullet = new Bullet(this);
             this.bullets.push(bullet);
+            const sound = new Audio('assets/shoot.mp3');
+            sound.play();
             this.hasFired = true;
         }
     }
@@ -151,6 +153,8 @@ class Ship {
         if (distance <= shipRadius + asteroidRadius - 1) {
             this.destroyed = true;
             asteroid.offScreen = true;
+            const sound = new Audio('assets/ship-death.mp3');
+            sound.play();
         }
     }
 
@@ -455,6 +459,8 @@ class Bullet {
         if (distance <= radius - 1) {
             this.offScreen = true;
             asteroid.destroyed = true;
+            const sound = new Audio('assets/explosion-' + Math.floor(1 + Math.random() * 3) + '.mp3');
+            sound.play();
         }
     }
 
