@@ -2,6 +2,8 @@ const canvas = document.getElementById('game-window');
 const ctx = canvas.getContext('2d');
 const playBtn = document.getElementById('play-btn');
 const resetBtn = document.getElementById('reset-btn');
+const endGameScoreboard = document.getElementById('end-game-scoreboard');
+const finalScore = document.getElementById('final-score');
 
 // GAME CANVAS CONSTANTS
 const gameWidth = canvas.width; 
@@ -320,6 +322,8 @@ class Game {
     }
 
     stopGame() {
+        
+        
         this.playGame = false;
         this.scoreboard.gameOver = true;
         document.removeEventListener('keydown', (e) => this.ship.keyDown(e));
@@ -331,6 +335,8 @@ class Game {
         playBtn.style.display = 'none';
         resetBtn.style.display = 'block';
         resetBtn.addEventListener('click', () => this.resetGame());
+        endGameScoreboard.classList.remove('hidden');
+        finalScore.textContent = this.scoreboard.score;
     }
 
     resetGame() {
@@ -339,6 +345,7 @@ class Game {
         resetBtn.style.display = 'none';
         playBtn.style.display = 'block';
         playBtn.classList.remove('hidden');
+        endGameScoreboard.classList.add('hidden');
     }
 
     spawnAsteroid() {
