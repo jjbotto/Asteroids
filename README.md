@@ -30,3 +30,8 @@ Controls are also visible in the game’s UI panel.
    git clone https://github.com/jjbotto/asteroids.git
 2. Navigate to the project directory
 3. Open index.html in your browser
+
+## Planned Updates
+
+- Local leaderboard
+- Particle effects on bullet hits and explosions
