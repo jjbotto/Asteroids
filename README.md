@@ -27,6 +27,6 @@ Controls are also visible in the game’s UI panel.
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/asteroids-remake.git
+   git clone https://github.com/jjbotto/asteroids.git
 2. Navigate to the project directory
 3. Open index.html in your browser
